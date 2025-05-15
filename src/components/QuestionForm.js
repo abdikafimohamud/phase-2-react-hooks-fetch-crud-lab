@@ -1,4 +1,4 @@
-// QuestionForm.js
+// src/QuestionForm.js
 import React, { useState } from "react";
 
 function QuestionForm({ onAddQuestion }) {
@@ -13,9 +13,9 @@ function QuestionForm({ onAddQuestion }) {
 
     if (name.startsWith("answer")) {
       const index = parseInt(name.replace("answer", ""));
-      const updatedAnswers = [...formData.answers];
-      updatedAnswers[index] = value;
-      setFormData({ ...formData, answers: updatedAnswers });
+      const newAnswers = [...formData.answers];
+      newAnswers[index] = value;
+      setFormData({ ...formData, answers: newAnswers });
     } else {
       setFormData({ ...formData, [name]: value });
     }
@@ -23,6 +23,7 @@ function QuestionForm({ onAddQuestion }) {
 
   function handleSubmit(e) {
     e.preventDefault();
+
     fetch("http://localhost:4000/questions", {
       method: "POST",
       headers: {
@@ -34,23 +35,26 @@ function QuestionForm({ onAddQuestion }) {
         correctIndex: parseInt(formData.correctIndex),
       }),
     })
-      .then((res) => res.json())
-      .then((newQuestion) => onAddQuestion(newQuestion));
+      .then((r) => r.json())
+      .then(onAddQuestion);
   }
 
   return (
     <section>
-      <h1>New Question</h1>
+      <h2>New Question</h2>
       <form onSubmit={handleSubmit}>
         <label>
           Prompt:
           <input name="prompt" value={formData.prompt} onChange={handleChange} />
         </label>
-        {formData.answers.map((ans, idx) => (
-          <label key={idx}>
-            Answer {idx + 1}:
-            <input name={`answer${idx}`} value={ans} onChange={handleChange} />
-
+        {formData.answers.map((answer, index) => (
+          <label key={index}>
+            Answer {index + 1}:
+            <input
+              name={`answer${index}`}
+              value={answer}
+              onChange={handleChange}
+            />
           </label>
         ))}
         <label>
@@ -62,12 +66,12 @@ function QuestionForm({ onAddQuestion }) {
           >
             {formData.answers.map((_, index) => (
               <option key={index} value={index}>
-                {index}
+                {`Answer ${index + 1}`}
               </option>
             ))}
           </select>
         </label>
-        <button type="submit">Add Question</button>
+        <button type="submit">Submit Question</button>
       </form>
     </section>
   );

@@ -1,15 +1,19 @@
-// App.js or QuestionContainer.js
-import React, { useEffect, useState } from "react";
-import QuestionList from "./QuestionList";
+// src/App.js
+import React, { useState, useEffect } from "react";
 import QuestionForm from "./QuestionForm";
+import QuestionList from "./QuestionList";
+import App from "../App.jsx";
+
 
 function App() {
   const [questions, setQuestions] = useState([]);
+  const [showQuestions, setShowQuestions] = useState(false);
 
   useEffect(() => {
     fetch("http://localhost:4000/questions")
-      .then((res) => res.json())
-      .then((data) => setQuestions(data));
+      .then((r) => r.json())
+      .then(setQuestions)
+      .catch((err) => console.error("Fetch error:", err));
   }, []);
 
   function handleAddQuestion(newQuestion) {
@@ -17,25 +21,44 @@ function App() {
   }
 
   function handleDeleteQuestion(id) {
-    const updated = questions.filter((q) => q.id !== id);
-    setQuestions(updated);
+    fetch(`http://localhost:4000/questions/${id}`, {
+      method: "DELETE",
+    }).then(() => {
+      setQuestions(questions.filter((q) => q.id !== id));
+    });
   }
 
-  function handleUpdateQuestion(updatedQuestion) {
-    const updated = questions.map((q) =>
-      q.id === updatedQuestion.id ? updatedQuestion : q
-    );
-    setQuestions(updated);
+  function handleUpdateCorrectAnswer(id, newCorrectIndex) {
+    fetch(`http://localhost:4000/questions/${id}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ correctIndex: newCorrectIndex }),
+    })
+      .then((r) => r.json())
+      .then((updatedQ) => {
+        const updatedList = questions.map((q) =>
+          q.id === updatedQ.id ? updatedQ : q
+        );
+        setQuestions(updatedList);
+      });
   }
 
   return (
     <main>
+      <h1>Quiz Admin App</h1>
       <QuestionForm onAddQuestion={handleAddQuestion} />
-      <QuestionList
-        questions={questions}
-        onDelete={handleDeleteQuestion}
-        onUpdate={handleUpdateQuestion}
-      />
+      <button onClick={() => setShowQuestions(!showQuestions)}>
+        {showQuestions ? "Hide Questions" : "View Questions"}
+      </button>
+      {showQuestions && (
+        <QuestionList
+          questions={questions}
+          onDelete={handleDeleteQuestion}
+          onUpdate={handleUpdateCorrectAnswer}
+        />
+      )}
     </main>
   );
 }
